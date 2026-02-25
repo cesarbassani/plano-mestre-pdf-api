@@ -1,0 +1,29 @@
+{
+  "name": "plano-mestre-pdf-api",
+  "version": "1.0.0",
+  "description": "API de geração de PDF para o Plano Mestre — Playwright + Express",
+  "main": "dist/server.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "dev": "ts-node src/server.ts"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.49.0",
+    "cors": "^2.8.5",
+    "date-fns": "^4.1.0",
+    "express": "^5.1.0",
+    "helmet": "^8.1.0",
+    "playwright-core": "1.50.0"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.2",
+    "@types/node": "^22.15.0",
+    "typescript": "^5.8.0",
+    "ts-node": "^10.9.2"
+  }
+}
