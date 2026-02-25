@@ -1,8 +1,8 @@
 // ============================================================
 // Template HTML — Plano de Aula
 // ============================================================
-// Gera uma string HTML completa que o Playwright converte em PDF.
-// O CSS @page + break-inside resolve TODOS os problemas de paginação.
+// Reproduz FIELMENTE o layout do PDF atual (jsPDF).
+// CSS @page + break-inside resolve problemas de paginação.
 // ============================================================
 
 import { format } from 'date-fns';
@@ -59,7 +59,7 @@ function groupByComponente(habilidades: HabilidadeData[]): GroupedObj[] {
 }
 
 // ============================================================
-// CSS do PDF
+// CSS — Replica fielmente o layout do PDF jsPDF atual
 // ============================================================
 
 const CSS = `
@@ -68,127 +68,126 @@ const CSS = `
 
   @page {
     size: A4;
-    margin: 0;
+    margin: 16mm 15mm 16mm 15mm;
   }
 
   body {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
     font-size: 9pt;
-    line-height: 1.5;
-    color: #333333;
+    line-height: 1.45;
+    color: #333;
     background: #fff;
   }
 
-  /* ── Design System ── */
-  :root {
-    --azul: #005A9C;
-    --azul-claro: #4D94CC;
-    --azul-bg: #EAF3FA;
-    --texto-pri: #333333;
-    --texto-sec: #666666;
-    --texto-label: #888888;
-    --cinza-borda: #DCE1E8;
-    --cinza-claro: #F0F2F5;
-  }
-
-  /* ── Header Institucional ── */
+  /* ── Header Institucional (centralizado) ── */
   .inst-header {
     text-align: center;
-    margin-bottom: 8pt;
+    margin-bottom: 6pt;
     break-inside: avoid;
   }
   .inst-header img.logo {
-    max-height: 50pt;
-    max-width: 140pt;
-    margin-bottom: 4pt;
+    max-height: 56pt;
+    max-width: 56pt;
+    margin-bottom: 6pt;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
   }
   .inst-header .inst-line {
-    font-size: 8pt;
-    color: var(--texto-sec);
-    line-height: 1.4;
+    font-size: 8.5pt;
+    font-weight: bold;
+    color: #333;
+    line-height: 1.5;
+    text-transform: uppercase;
   }
 
   /* ── Título principal ── */
   .main-title {
     text-align: center;
-    font-size: 13pt;
+    font-size: 14pt;
     font-weight: bold;
-    color: var(--texto-pri);
-    padding: 10pt 0 6pt;
+    color: #333;
+    padding: 14pt 0 8pt;
     break-after: avoid;
   }
 
+  /* ── Linha divisória fina ── */
   .divider {
     border: none;
-    border-top: 0.5pt solid var(--cinza-borda);
-    margin: 4pt 0 8pt;
+    border-top: 1pt solid #ccc;
+    margin: 0 0 10pt;
   }
 
-  /* ── Metadados ── */
+  /* ── Metadados (tabela com labels bold) ── */
   .meta-table {
     width: 100%;
     border-collapse: collapse;
-    margin-bottom: 8pt;
+    margin-bottom: 10pt;
     break-inside: avoid;
   }
   .meta-table td {
     padding: 3pt 4pt;
     vertical-align: top;
     font-size: 9pt;
+    line-height: 1.4;
   }
   .meta-label {
     font-weight: bold;
-    color: var(--texto-pri);
+    color: #333;
     white-space: nowrap;
     width: 1%;
+    padding-right: 8pt;
   }
   .meta-value {
-    color: var(--texto-sec);
+    color: #444;
   }
 
-  /* ── Dia ── */
+  /* ── Day header (centralizado, bold) ── */
   .day-block {
-    margin-top: 6pt;
+    margin-top: 8pt;
   }
   .day-header {
     text-align: center;
-    font-size: 10pt;
+    font-size: 10.5pt;
     font-weight: bold;
-    color: var(--texto-pri);
-    padding: 8pt 0 4pt;
+    color: #333;
+    padding: 12pt 0 8pt;
     break-after: avoid;
   }
-  .day-divider {
-    border: none;
-    border-top: 0.5pt solid var(--cinza-borda);
-    margin: 0 0 6pt;
-  }
 
-  /* ── Seção (barra azul + conteúdo com borda) ── */
+  /* ══════════════════════════════════════════════
+     Seções — borda esquerda grossa + fundo cinza
+     no header, borda fina ao redor do corpo
+     ══════════════════════════════════════════════ */
+
   .section {
-    margin-bottom: 6pt;
+    margin-bottom: 8pt;
     break-inside: avoid;
     page-break-inside: avoid;
   }
+
   .section-bar {
-    background-color: var(--azul-bg);
-    padding: 4pt 8pt;
+    background-color: #F0F2F5;
+    border-left: 3pt solid #9CA3AF;
+    padding: 5pt 10pt;
     font-size: 9pt;
     font-weight: bold;
-    color: var(--texto-pri);
+    color: #333;
     text-transform: uppercase;
     break-after: avoid;
   }
+
   .section-body {
-    border: 0.5pt solid var(--cinza-borda);
+    border: 0.5pt solid #DCE1E8;
     border-top: none;
-    padding: 8pt 10pt;
+    border-left: 3pt solid #E5E7EB;
+    padding: 8pt 12pt;
     font-size: 8.5pt;
-    color: var(--texto-sec);
-    line-height: 1.6;
+    color: #444;
+    line-height: 1.55;
   }
 
-  /* ── Metodologia: permitir quebra interna ── */
+  /* ── Metodologia: permitir quebra interna (conteúdo longo) ── */
   .section.metodologia {
     break-inside: auto;
     page-break-inside: auto;
@@ -211,34 +210,35 @@ const CSS = `
 
   /* ── Objetos de Conhecimento ── */
   .objeto-item {
-    margin-bottom: 3pt;
+    margin-bottom: 2pt;
+    line-height: 1.5;
   }
   .objeto-comp {
     font-weight: bold;
-    color: var(--texto-pri);
+    color: #333;
     text-transform: uppercase;
   }
 
-  /* ── Habilidades ── */
+  /* ── Habilidades (hanging indent) ── */
   .hab-item {
-    margin-bottom: 5pt;
-    display: flex;
-    gap: 4pt;
-    align-items: flex-start;
+    margin-bottom: 6pt;
+    padding-left: 12pt;
+    text-indent: -12pt;
+    line-height: 1.55;
   }
   .hab-bullet {
-    color: var(--texto-sec);
-    flex-shrink: 0;
-    margin-top: 1pt;
+    color: #666;
+    font-size: 7pt;
+    vertical-align: middle;
+    margin-right: 3pt;
   }
   .hab-code {
     font-weight: bold;
-    color: var(--azul);
+    color: #333;
     white-space: nowrap;
-    flex-shrink: 0;
   }
   .hab-desc {
-    color: var(--texto-sec);
+    color: #444;
   }
 
   /* ── Observação (itálico) ── */
@@ -271,7 +271,7 @@ export function renderPlanoHtml(header: PlanHeader, dias: DiaData[]): string {
 <body>
 `);
 
-  // ── Header institucional ──
+  // ── Header institucional (logo + 3 linhas) ──
   if (header.instituicao) {
     const inst = header.instituicao;
     parts.push('<div class="inst-header">');
@@ -294,7 +294,7 @@ export function renderPlanoHtml(header: PlanHeader, dias: DiaData[]): string {
   parts.push('<div class="main-title">PLANO DE AULA DO ENSINO FUNDAMENTAL</div>');
   parts.push('<hr class="divider">');
 
-  // ── Metadados ──
+  // ── Metadados (ordem: Professor, Componente, Período+Ano, Turma+Turno, Escola) ──
   const periodoText = (() => {
     try {
       const inicio = formatDate(header.periodoInicio, 'dd');
@@ -313,6 +313,10 @@ export function renderPlanoHtml(header: PlanHeader, dias: DiaData[]): string {
 
   parts.push(`
   <table class="meta-table">
+    <tr>
+      <td class="meta-label">Escola:</td>
+      <td class="meta-value" colspan="3">${esc(header.escola)}</td>
+    </tr>
     <tr>
       <td class="meta-label">Professor(a):</td>
       <td class="meta-value" colspan="3">${esc(header.professor)}</td>
@@ -333,10 +337,6 @@ export function renderPlanoHtml(header: PlanHeader, dias: DiaData[]): string {
       <td class="meta-label">Turno(s):</td>
       <td class="meta-value">${esc(header.turno)}</td>
     </tr>
-    <tr>
-      <td class="meta-label">Escola:</td>
-      <td class="meta-value" colspan="3">${esc(header.escola)}</td>
-    </tr>
   </table>
   `);
 
@@ -344,12 +344,11 @@ export function renderPlanoHtml(header: PlanHeader, dias: DiaData[]): string {
   for (const dia of dias) {
     parts.push('<div class="day-block">');
 
-    // Day header
+    // Day header: "27/02/2026: sexta-feira – REGULAR"
     if (!dia.ocultar_data_pdf) {
-      const dayDate = formatDate(dia.data_aula, "dd/MM/yyyy': 'EEEE");
-      const tipoLabel = dia.tipo === 'Presencial' ? 'REGULAR' : dia.tipo;
-      parts.push('<hr class="day-divider">');
-      parts.push(`<div class="day-header">${esc(dayDate)} – ${esc(tipoLabel)}</div>`);
+      const dayFormatted = formatDate(dia.data_aula, "dd/MM/yyyy': 'EEEE");
+      const tipoLabel = dia.tipo === 'Presencial' ? 'REGULAR' : dia.tipo.toUpperCase();
+      parts.push(`<div class="day-header">${esc(dayFormatted)} – ${esc(tipoLabel)}</div>`);
     }
 
     // Agrupar habilidades por componente
@@ -380,8 +379,8 @@ export function renderPlanoHtml(header: PlanHeader, dias: DiaData[]): string {
       parts.push('<div class="section-body">');
       for (const hab of dia.habilidades) {
         parts.push('<div class="hab-item">');
-        parts.push('<span class="hab-bullet">•</span>');
-        parts.push(`<span class="hab-code">(${esc(hab.code)})</span>`);
+        parts.push('<span class="hab-bullet">•</span> ');
+        parts.push(`<span class="hab-code">(${esc(hab.code)})</span> `);
         parts.push(`<span class="hab-desc">${esc(hab.description)}</span>`);
         parts.push('</div>');
       }
