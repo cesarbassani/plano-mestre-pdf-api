@@ -14,7 +14,7 @@ WORKDIR /app
 COPY package.json package-lock.json* ./
 
 # Instalar apenas dependências de produção
-RUN npm ci --omit=dev
+RUN npm ci
 
 # Copiar código-fonte
 COPY tsconfig.json ./
@@ -24,7 +24,7 @@ COPY src/ ./src/
 RUN npx tsc
 
 # Remover src e devDependencies (imagem menor)
-RUN rm -rf src/ tsconfig.json
+RUN rm -rf src/ tsconfig.json && npm prune --omit=dev
 
 # Porta do servidor
 EXPOSE 3000
