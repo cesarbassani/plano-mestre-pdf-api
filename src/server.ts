@@ -7,6 +7,9 @@ import cors from 'cors';
 import helmet from 'helmet';
 import { config } from './config';
 import { testPlaywright, closeBrowser, generatePdf } from './services/pdf-generator';
+import { fetchPlanoData } from './services/supabase';
+import { renderPlanoHtml } from './templates/plano';
+import { uploadPdf } from './services/storage';
 
 const app = express();
 
@@ -15,7 +18,6 @@ const app = express();
 app.use(helmet());
 app.use(express.json({ limit: '1mb' }));
 
-// CORS — aceita apenas o domínio do frontend
 app.use(cors({
   origin: config.frontendUrl === '*' ? '*' : [config.frontendUrl],
   methods: ['GET', 'POST'],
@@ -26,7 +28,6 @@ app.use(cors({
 
 function authMiddleware(req: Request, res: Response, next: NextFunction): void {
   const apiKey = req.headers['x-api-key'];
-
   if (!apiKey || apiKey !== config.apiSecret) {
     res.status(401).json({
       error: 'Não autorizado',
@@ -34,14 +35,13 @@ function authMiddleware(req: Request, res: Response, next: NextFunction): void {
     });
     return;
   }
-
   next();
 }
 
 // ── Rotas ────────────────────────────────────────────────────
 
-// Health check — público (sem auth)
-app.get('/health', async (_req: Request, res: Response) => {
+// Health check — público
+app.get('/health', (_req: Request, res: Response) => {
   res.json({
     status: 'ok',
     service: 'plano-mestre-pdf-api',
@@ -49,23 +49,21 @@ app.get('/health', async (_req: Request, res: Response) => {
   });
 });
 
-// Health check detalhado — testa Playwright
+// Health check completo — testa Playwright
 app.get('/health/full', async (_req: Request, res: Response) => {
   const playwrightOk = await testPlaywright();
-
   res.status(playwrightOk ? 200 : 503).json({
     status: playwrightOk ? 'ok' : 'degraded',
-    service: 'plano-mestre-pdf-api',
     playwright: playwrightOk ? 'ok' : 'error',
     timestamp: new Date().toISOString(),
   });
 });
 
 // ── Endpoint principal — Geração de PDF ─────────────────────
-// (Etapas 6-10 completarão este endpoint)
 
 app.post('/api/pdf/generate', authMiddleware, async (req: Request, res: Response) => {
   const { plano_id } = req.body;
+  const start = Date.now();
 
   if (!plano_id) {
     res.status(400).json({
@@ -76,47 +74,49 @@ app.post('/api/pdf/generate', authMiddleware, async (req: Request, res: Response
   }
 
   try {
-    // TODO Etapa 6: fetchPlanoData(plano_id) → header + dias
-    // TODO Etapa 7: renderPlanoHtml(header, dias) → html string
-    // TODO Etapa 8: generatePdf(html) → Buffer
-    // TODO Etapa 9: uploadPdf(buffer) → signed URL
+    console.log(`\n🔄 Gerando PDF para plano: ${plano_id}`);
 
-    // Por enquanto, gerar um PDF de teste para validar o pipeline
-    const testHtml = `
-      <html>
-      <head><style>
-        body { font-family: Helvetica, Arial, sans-serif; padding: 40px; }
-        h1 { color: #005A9C; }
-      </style></head>
-      <body>
-        <h1>PLANO DE AULA DO ENSINO FUNDAMENTAL</h1>
-        <p>PDF de teste gerado com sucesso!</p>
-        <p>plano_id recebido: <strong>${plano_id}</strong></p>
-        <p>Timestamp: ${new Date().toISOString()}</p>
-        <hr>
-        <p><em>Este é um PDF de teste. O template real será implementado na Etapa 7.</em></p>
-      </body>
-      </html>
-    `;
+    // 1. Buscar dados do plano no Supabase
+    console.log('  📥 Buscando dados...');
+    const { header, dias } = await fetchPlanoData(plano_id);
+    console.log(`  ✅ Dados: ${dias.length} dia(s), ${header.componentes.length} componente(s)`);
 
-    const pdfBuffer = await generatePdf(testHtml);
+    // 2. Renderizar template HTML
+    console.log('  🎨 Renderizando HTML...');
+    const html = renderPlanoHtml(header, dias);
 
-    // Por enquanto, retornar o PDF diretamente (sem Storage)
-    // Na Etapa 9, mudaremos para upload + signed URL
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `inline; filename="plano_${plano_id}.pdf"`);
-    res.send(pdfBuffer);
+    // 3. Gerar PDF com Playwright
+    console.log('  📄 Gerando PDF...');
+    const pdfBuffer = await generatePdf(html);
+
+    // 4. Upload para Supabase Storage
+    console.log('  📦 Fazendo upload...');
+    const signedUrl = await uploadPdf(pdfBuffer, plano_id);
+
+    const elapsed = Date.now() - start;
+    console.log(`  ✅ Concluído em ${elapsed}ms — ${(pdfBuffer.length / 1024).toFixed(1)}KB\n`);
+
+    res.json({
+      url: signedUrl,
+      size_kb: Math.round(pdfBuffer.length / 1024),
+      elapsed_ms: elapsed,
+    });
 
   } catch (error) {
-    console.error('❌ Erro ao gerar PDF:', error);
-    res.status(500).json({
-      error: 'Erro interno',
-      message: error instanceof Error ? error.message : 'Erro desconhecido',
-    });
+    const elapsed = Date.now() - start;
+    const message = error instanceof Error ? error.message : 'Erro desconhecido';
+    console.error(`  ❌ Erro (${elapsed}ms): ${message}\n`);
+
+    // Diferenciar erros
+    if (message.includes('Plano não encontrado')) {
+      res.status(404).json({ error: 'Não encontrado', message });
+    } else {
+      res.status(500).json({ error: 'Erro interno', message });
+    }
   }
 });
 
-// ── 404 fallback ─────────────────────────────────────────────
+// ── 404 ──────────────────────────────────────────────────────
 
 app.use((_req: Request, res: Response) => {
   res.status(404).json({ error: 'Rota não encontrada' });

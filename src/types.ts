@@ -1,7 +1,6 @@
 // ============================================================
 // Types — Interfaces do Plano Mestre
 // ============================================================
-// Estas interfaces espelham as que o frontend usa no generatePdf.ts
 
 export interface HabilidadeData {
   code: string;
@@ -23,8 +22,16 @@ export interface DiaData {
   avaliacao: string | null;
   observacoes: string | null;
   outros_recursos: string | null;
+  ocultar_data_pdf?: boolean;
   habilidades: HabilidadeData[];
   recursos: RecursoData[];
+}
+
+export interface InstituicaoData {
+  logoUrl?: string | null;
+  prefeitura?: string | null;
+  estado?: string | null;
+  secretaria?: string | null;
 }
 
 export interface PlanHeader {
@@ -36,4 +43,10 @@ export interface PlanHeader {
   anoSerie: string;
   turmas: string[];
   turno: string;
+  instituicao?: InstituicaoData | null;
+}
+
+export interface PlanoResult {
+  header: PlanHeader;
+  dias: DiaData[];
 }

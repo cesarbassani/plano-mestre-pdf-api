@@ -13,7 +13,7 @@ WORKDIR /app
 # Copiar arquivos de dependência primeiro (cache de camadas Docker)
 COPY package.json package-lock.json* ./
 
-# Instalar apenas dependências de produção
+# Instalar TODAS as dependências (inclusive devDeps para compilar)
 RUN npm ci
 
 # Copiar código-fonte
@@ -23,7 +23,7 @@ COPY src/ ./src/
 # Compilar TypeScript
 RUN npx tsc
 
-# Remover src e devDependencies (imagem menor)
+# Remover src, tsconfig e devDependencies (imagem menor)
 RUN rm -rf src/ tsconfig.json && npm prune --omit=dev
 
 # Porta do servidor
