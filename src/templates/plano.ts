@@ -347,8 +347,8 @@ export function renderPlanoHtml(header: PlanHeader, dias: DiaData[]): string {
     // Day header: "27/02/2026: sexta-feira – REGULAR"
     if (!dia.ocultar_data_pdf) {
       const dayFormatted = formatDate(dia.data_aula, "dd/MM/yyyy': 'EEEE");
-      const tipoLabel = dia.tipo === 'Presencial' ? 'REGULAR' : dia.tipo.toUpperCase();
-      parts.push(`<div class="day-header">${esc(dayFormatted)} – ${esc(tipoLabel)}</div>`);
+      const tipoLabel = dia.tipo === 'Presencial' ? '' : " - " + dia.tipo.toUpperCase();
+      parts.push(`<div class="day-header">${esc(dayFormatted)}${esc(tipoLabel)}</div>`);
     }
 
     // Agrupar habilidades por componente
@@ -379,7 +379,6 @@ export function renderPlanoHtml(header: PlanHeader, dias: DiaData[]): string {
       parts.push('<div class="section-body">');
       for (const hab of dia.habilidades) {
         parts.push('<div class="hab-item">');
-        parts.push('<span class="hab-bullet">•</span> ');
         parts.push(`<span class="hab-code">(${esc(hab.code)})</span> `);
         parts.push(`<span class="hab-desc">${esc(hab.description)}</span>`);
         parts.push('</div>');
