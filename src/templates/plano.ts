@@ -223,7 +223,7 @@ const CSS = `
   .hab-item {
     margin-bottom: 6pt;
     padding-left: 12pt;
-    text-indent: -12pt;
+    text-align: justify
     line-height: 1.55;
   }
   .hab-bullet {
