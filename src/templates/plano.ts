@@ -297,8 +297,13 @@ export function renderPlanoHtml(header: PlanHeader, dias: DiaData[]): string {
   // ── Metadados (ordem: Professor, Componente, Período+Ano, Turma+Turno, Escola) ──
   const periodoText = (() => {
     try {
-      const inicio = formatDate(header.periodoInicio, 'dd');
-      const fim = formatDate(header.periodoFim, "dd 'de' MMMM");
+      if (header.periodoInicio === header.periodoFim) {
+        // Dia único: "27/02/2026"
+        return formatDate(header.periodoInicio, 'dd/MM/yyyy');
+      }
+      // Período: "27/02 a 28/02/2026"
+      const inicio = formatDate(header.periodoInicio, 'dd/MM');
+      const fim = formatDate(header.periodoFim, 'dd/MM/yyyy');
       return `${inicio} a ${fim}`;
     } catch {
       return `${header.periodoInicio} a ${header.periodoFim}`;
