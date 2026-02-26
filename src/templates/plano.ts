@@ -351,6 +351,7 @@ export function renderPlanoHtml(header: PlanHeader, dias: DiaData[]): string {
     </div>
   </div>
   `);
+  parts.push('<hr class="divider">');
 
   // ── Dias ──
   for (const dia of dias) {
