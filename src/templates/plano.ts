@@ -123,20 +123,24 @@ const CSS = `
     margin-bottom: 10pt;
     break-inside: avoid;
   }
+
   .meta-row {
     padding: 2pt 0;
     font-size: 9pt;
     line-height: 1.5;
   }
+
   .meta-row-split {
     display: flex;
-    justify-content: space-between;
+    gap: 30px; /* Espaço fixo entre Período/Ano e Turma/Turno */
   }
+
   .meta-label {
     font-weight: bold;
     color: #333;
     margin-right: 4pt;
   }
+
   .meta-value {
     color: #444;
   }
@@ -145,6 +149,7 @@ const CSS = `
   .day-block {
     margin-top: 8pt;
   }
+
   .day-header {
     text-align: center;
     font-size: 10.5pt;
