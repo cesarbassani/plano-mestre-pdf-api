@@ -320,15 +320,15 @@ export function renderPlanoHtml(header: PlanHeader, dias: DiaData[]): string {
   <table class="meta-table">
     <tr>
       <td class="meta-label">Escola:</td>
-      <td class="meta-value" colspan="3">${esc(header.escola)}</td>
+      <td class="meta-value">${esc(header.escola)}</td>
     </tr>
     <tr>
       <td class="meta-label">Professor(a):</td>
-      <td class="meta-value" colspan="3">${esc(header.professor)}</td>
+      <td class="meta-value">${esc(header.professor)}</td>
     </tr>
     <tr>
       <td class="meta-label">Componente curricular:</td>
-      <td class="meta-value" colspan="3">${esc(header.componentes.join(' / '))}</td>
+      <td class="meta-value">${esc(header.componentes.join(' / '))}</td>
     </tr>
     <tr>
       <td class="meta-label">Período de Execução:</td>
