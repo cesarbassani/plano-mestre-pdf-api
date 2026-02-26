@@ -118,25 +118,24 @@ const CSS = `
     margin: 0 0 10pt;
   }
 
-  /* ── Metadados (tabela com labels bold) ── */
-  .meta-table {
-    width: 100%;
-    border-collapse: collapse;
+  /* ── Metadados (divs inline) ── */
+  .meta-block {
     margin-bottom: 10pt;
     break-inside: avoid;
   }
-  .meta-table td {
-    padding: 3pt 4pt;
-    vertical-align: top;
+  .meta-row {
+    padding: 2pt 0;
     font-size: 9pt;
-    line-height: 1.4;
+    line-height: 1.5;
+  }
+  .meta-row-split {
+    display: flex;
+    justify-content: space-between;
   }
   .meta-label {
     font-weight: bold;
     color: #333;
-    white-space: nowrap;
-    width: 1%;
-    padding-right: 8pt;
+    margin-right: 4pt;
   }
   .meta-value {
     color: #444;
@@ -317,32 +316,40 @@ export function renderPlanoHtml(header: PlanHeader, dias: DiaData[]): string {
     .join(', ');
 
   parts.push(`
-  <table class="meta-table">
-    <tr>
-      <td class="meta-label">Escola:</td>
-      <td class="meta-value">${esc(header.escola)}</td>
-    </tr>
-    <tr>
-      <td class="meta-label">Professor(a):</td>
-      <td class="meta-value">${esc(header.professor)}</td>
-    </tr>
-    <tr>
-      <td class="meta-label">Componente curricular:</td>
-      <td class="meta-value">${esc(header.componentes.join(' / '))}</td>
-    </tr>
-    <tr>
-      <td class="meta-label">Período de Execução:</td>
-      <td class="meta-value">${esc(periodoText)}</td>
-      <td class="meta-label">Ano escolar:</td>
-      <td class="meta-value">${esc(anoEscolar)}</td>
-    </tr>
-    <tr>
-      <td class="meta-label">Turma(s):</td>
-      <td class="meta-value">${esc(turmasFormatted)}</td>
-      <td class="meta-label">Turno(s):</td>
-      <td class="meta-value">${esc(header.turno)}</td>
-    </tr>
-  </table>
+  <div class="meta-block">
+    <div class="meta-row">
+      <span class="meta-label">Escola:</span>
+      <span class="meta-value">${esc(header.escola)}</span>
+    </div>
+    <div class="meta-row">
+      <span class="meta-label">Professor(a):</span>
+      <span class="meta-value">${esc(header.professor)}</span>
+    </div>
+    <div class="meta-row">
+      <span class="meta-label">Componente curricular:</span>
+      <span class="meta-value">${esc(header.componentes.join(' / '))}</span>
+    </div>
+    <div class="meta-row meta-row-split">
+      <span>
+        <span class="meta-label">Período de Execução:</span>
+        <span class="meta-value">${esc(periodoText)}</span>
+      </span>
+      <span>
+        <span class="meta-label">Ano escolar:</span>
+        <span class="meta-value">${esc(anoEscolar)}</span>
+      </span>
+    </div>
+    <div class="meta-row meta-row-split">
+      <span>
+        <span class="meta-label">Turma(s):</span>
+        <span class="meta-value">${esc(turmasFormatted)}</span>
+      </span>
+      <span>
+        <span class="meta-label">Turno(s):</span>
+        <span class="meta-value">${esc(header.turno)}</span>
+      </span>
+    </div>
+  </div>
   `);
 
   // ── Dias ──
