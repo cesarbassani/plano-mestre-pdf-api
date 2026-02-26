@@ -10,6 +10,7 @@ import { testPlaywright, closeBrowser, generatePdf } from './services/pdf-genera
 import { fetchPlanoData } from './services/supabase';
 import { renderPlanoHtml } from './templates/plano';
 import { uploadPdf } from './services/storage';
+import { computeHash, getCachedUrl, setCachedUrl, invalidateCache, getCacheStats } from './services/cache';
 
 const app = express();
 
@@ -62,7 +63,7 @@ app.get('/health/full', async (_req: Request, res: Response) => {
 // ── Endpoint principal — Geração de PDF ─────────────────────
 
 app.post('/api/pdf/generate', authMiddleware, async (req: Request, res: Response) => {
-  const { plano_id } = req.body;
+  const { plano_id, force } = req.body;
   const start = Date.now();
 
   if (!plano_id) {
@@ -81,24 +82,47 @@ app.post('/api/pdf/generate', authMiddleware, async (req: Request, res: Response
     const { header, dias } = await fetchPlanoData(plano_id);
     console.log(`  ✅ Dados: ${dias.length} dia(s), ${header.componentes.length} componente(s)`);
 
-    // 2. Renderizar template HTML
+    // 2. Computar hash dos dados para verificar cache
+    const dataHash = computeHash(JSON.stringify({ header, dias }));
+
+    // 3. Verificar cache (pular se force=true)
+    if (!force) {
+      const cachedUrl = getCachedUrl(plano_id, dataHash);
+      if (cachedUrl) {
+        const elapsed = Date.now() - start;
+        console.log(`  ⚡ Cache hit em ${elapsed}ms\n`);
+        res.json({
+          url: cachedUrl,
+          cached: true,
+          elapsed_ms: elapsed,
+        });
+        return;
+      }
+    }
+
+    // 4. Renderizar template HTML
     console.log('  🎨 Renderizando HTML...');
     const html = renderPlanoHtml(header, dias);
 
-    // 3. Gerar PDF com Playwright
+    // 5. Gerar PDF com Playwright
     console.log('  📄 Gerando PDF...');
     const pdfBuffer = await generatePdf(html);
 
-    // 4. Upload para Supabase Storage
+    // 6. Upload para Supabase Storage
     console.log('  📦 Fazendo upload...');
     const signedUrl = await uploadPdf(pdfBuffer, plano_id);
 
+    // 7. Salvar no cache
+    const sizeKb = Math.round(pdfBuffer.length / 1024);
+    setCachedUrl(plano_id, signedUrl, dataHash, sizeKb);
+
     const elapsed = Date.now() - start;
-    console.log(`  ✅ Concluído em ${elapsed}ms — ${(pdfBuffer.length / 1024).toFixed(1)}KB\n`);
+    console.log(`  ✅ Concluído em ${elapsed}ms — ${sizeKb}KB\n`);
 
     res.json({
       url: signedUrl,
-      size_kb: Math.round(pdfBuffer.length / 1024),
+      cached: false,
+      size_kb: sizeKb,
       elapsed_ms: elapsed,
     });
 
@@ -107,13 +131,32 @@ app.post('/api/pdf/generate', authMiddleware, async (req: Request, res: Response
     const message = error instanceof Error ? error.message : 'Erro desconhecido';
     console.error(`  ❌ Erro (${elapsed}ms): ${message}\n`);
 
-    // Diferenciar erros
     if (message.includes('Plano não encontrado')) {
       res.status(404).json({ error: 'Não encontrado', message });
     } else {
       res.status(500).json({ error: 'Erro interno', message });
     }
   }
+});
+
+// ── Invalidar cache de um plano ─────────────────────────────
+
+app.post('/api/pdf/invalidate', authMiddleware, (req: Request, res: Response) => {
+  const { plano_id } = req.body;
+
+  if (!plano_id) {
+    res.status(400).json({ error: 'plano_id é obrigatório' });
+    return;
+  }
+
+  const deleted = invalidateCache(plano_id);
+  res.json({ invalidated: deleted, plano_id });
+});
+
+// ── Estatísticas do cache ───────────────────────────────────
+
+app.get('/api/cache/stats', authMiddleware, (_req: Request, res: Response) => {
+  res.json(getCacheStats());
 });
 
 // ── 404 ──────────────────────────────────────────────────────
