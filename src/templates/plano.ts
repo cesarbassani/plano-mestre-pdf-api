@@ -73,7 +73,7 @@ const CSS = `
 
   body {
     font-family: Arial, Helvetica, sans-serif;
-    font-size: 12pt;
+    font-size: 11pt;
     line-height: 1.45;
     color: #333;
     background: #fff;
@@ -125,7 +125,7 @@ const CSS = `
   }
   .meta-row {
     padding: 2pt 0;
-    font-size: 12pt;
+    font-size: 11pt;
     line-height: 1.5;
   }
   .meta-row-split {
@@ -169,7 +169,7 @@ const CSS = `
     background-color: #F0F2F5;
     border-left: 3pt solid #9CA3AF;
     padding: 5pt 10pt;
-    font-size: 12pt;
+    font-size: 11pt;
     font-weight: bold;
     color: #333;
     text-transform: uppercase;
@@ -181,7 +181,7 @@ const CSS = `
     border-top: none;
     border-left: 3pt solid #E5E7EB;
     padding: 8pt 12pt;
-    font-size: 12pt;
+    font-size: 11pt;
     color: #444;
     line-height: 1.55;
   }
