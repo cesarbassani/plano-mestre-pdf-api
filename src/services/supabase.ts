@@ -28,7 +28,7 @@ export function getSupabaseClient(): SupabaseClient {
 // fetchPlanoData — Busca todos os dados de um plano
 // ============================================================
 
-export async function fetchPlanoData(planoId: string): Promise<PlanoResult> {
+export async function fetchPlanoData(planoId: string, diaIds?: string[]): Promise<PlanoResult> {
   const supabase = getSupabaseClient();
 
   // ── 1. Planejamento principal + escola + componentes + turmas ──
@@ -68,12 +68,18 @@ export async function fetchPlanoData(planoId: string): Promise<PlanoResult> {
     .eq('user_id', planInfo.user_id)
     .single();
 
-  // ── 4. Dias do planejamento ──
+  // ── 4. Dias do planejamento (filtrar por dia_ids se fornecido) ──
 
-  const { data: dias, error: diasError } = await supabase
+  let diasQuery = supabase
     .from('dias_planejamento')
     .select('*')
-    .eq('planejamento_id', planoId)
+    .eq('planejamento_id', planoId);
+
+  if (diaIds && diaIds.length > 0) {
+    diasQuery = diasQuery.in('id', diaIds);
+  }
+
+  const { data: dias, error: diasError } = await diasQuery
     .order('data_aula', { ascending: true });
 
   if (diasError) {

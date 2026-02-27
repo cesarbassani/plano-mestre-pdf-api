@@ -63,7 +63,7 @@ app.get('/health/full', async (_req: Request, res: Response) => {
 // ── Endpoint principal — Geração de PDF ─────────────────────
 
 app.post('/api/pdf/generate', authMiddleware, async (req: Request, res: Response) => {
-  const { plano_id, force } = req.body;
+  const { plano_id, force, dia_ids } = req.body;
   const start = Date.now();
 
   if (!plano_id) {
@@ -79,15 +79,18 @@ app.post('/api/pdf/generate', authMiddleware, async (req: Request, res: Response
 
     // 1. Buscar dados do plano no Supabase
     console.log('  📥 Buscando dados...');
-    const { header, dias } = await fetchPlanoData(plano_id);
+    const filterIds = Array.isArray(dia_ids) && dia_ids.length > 0 ? dia_ids : undefined;
+    const { header, dias } = await fetchPlanoData(plano_id, filterIds);
     console.log(`  ✅ Dados: ${dias.length} dia(s), ${header.componentes.length} componente(s)`);
 
     // 2. Computar hash dos dados para verificar cache
-    const dataHash = computeHash(JSON.stringify({ header, dias }));
+    const dataHash = computeHash(JSON.stringify({ header, dias, dia_ids: filterIds }));
 
     // 3. Verificar cache (pular se force=true)
+    // Chave do cache inclui dia_ids para diferenciar PDFs parciais
+    const cacheKey = filterIds ? `${plano_id}:${filterIds.sort().join(',')}` : plano_id;
     if (!force) {
-      const cachedUrl = getCachedUrl(plano_id, dataHash);
+      const cachedUrl = getCachedUrl(cacheKey, dataHash);
       if (cachedUrl) {
         const elapsed = Date.now() - start;
         console.log(`  ⚡ Cache hit em ${elapsed}ms\n`);
@@ -114,7 +117,7 @@ app.post('/api/pdf/generate', authMiddleware, async (req: Request, res: Response
 
     // 7. Salvar no cache
     const sizeKb = Math.round(pdfBuffer.length / 1024);
-    setCachedUrl(plano_id, signedUrl, dataHash, sizeKb);
+    setCachedUrl(cacheKey, signedUrl, dataHash, sizeKb);
 
     const elapsed = Date.now() - start;
     console.log(`  ✅ Concluído em ${elapsed}ms — ${sizeKb}KB\n`);

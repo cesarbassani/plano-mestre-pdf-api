@@ -72,8 +72,8 @@ const CSS = `
   }
 
   body {
-    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-    font-size: 9pt;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 12pt;
     line-height: 1.45;
     color: #333;
     background: #fff;
@@ -125,7 +125,7 @@ const CSS = `
   }
   .meta-row {
     padding: 2pt 0;
-    font-size: 9pt;
+    font-size: 12pt;
     line-height: 1.5;
   }
   .meta-row-split {
@@ -169,7 +169,7 @@ const CSS = `
     background-color: #F0F2F5;
     border-left: 3pt solid #9CA3AF;
     padding: 5pt 10pt;
-    font-size: 9pt;
+    font-size: 12pt;
     font-weight: bold;
     color: #333;
     text-transform: uppercase;
@@ -181,7 +181,7 @@ const CSS = `
     border-top: none;
     border-left: 3pt solid #E5E7EB;
     padding: 8pt 12pt;
-    font-size: 8.5pt;
+    font-size: 12pt;
     color: #444;
     line-height: 1.55;
   }
@@ -218,18 +218,11 @@ const CSS = `
     text-transform: uppercase;
   }
 
-  /* ── Habilidades (hanging indent) ── */
+  /* ── Habilidades ── */
   .hab-item {
-    margin-bottom: 6pt;
-    padding-left: 12pt;
-    text-align: justify
+    margin-bottom: 8pt;
     line-height: 1.55;
-  }
-  .hab-bullet {
-    color: #666;
-    font-size: 7pt;
-    vertical-align: middle;
-    margin-right: 3pt;
+    text-align: justify;
   }
   .hab-code {
     font-weight: bold;
@@ -351,7 +344,6 @@ export function renderPlanoHtml(header: PlanHeader, dias: DiaData[]): string {
     </div>
   </div>
   `);
-  parts.push('<hr class="divider">');
 
   // ── Dias ──
   for (const dia of dias) {
@@ -360,8 +352,8 @@ export function renderPlanoHtml(header: PlanHeader, dias: DiaData[]): string {
     // Day header: "27/02/2026: sexta-feira – REGULAR"
     if (!dia.ocultar_data_pdf) {
       const dayFormatted = formatDate(dia.data_aula, "dd/MM/yyyy': 'EEEE");
-      const tipoLabel = dia.tipo === 'Presencial' ? '' : " - " + dia.tipo.toUpperCase();
-      parts.push(`<div class="day-header">${esc(dayFormatted)}${esc(tipoLabel)}</div>`);
+      const tipoLabel = dia.tipo === 'Presencial' ? 'REGULAR' : dia.tipo.toUpperCase();
+      parts.push(`<div class="day-header">${esc(dayFormatted)} – ${esc(tipoLabel)}</div>`);
     }
 
     // Agrupar habilidades por componente
