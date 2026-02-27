@@ -73,7 +73,7 @@ const CSS = `
 
   body {
     font-family: Arial, Helvetica, sans-serif;
-    font-size: 11pt;
+    font-size: 10pt;
     line-height: 1.45;
     color: #333;
     background: #fff;
@@ -104,7 +104,7 @@ const CSS = `
   /* ── Título principal ── */
   .main-title {
     text-align: center;
-    font-size: 14pt;
+    font-size: 12pt;
     font-weight: bold;
     color: #333;
     padding: 14pt 0 8pt;
@@ -125,7 +125,7 @@ const CSS = `
   }
   .meta-row {
     padding: 2pt 0;
-    font-size: 11pt;
+    font-size: 10pt;
     line-height: 1.5;
   }
   .meta-row-split {
@@ -169,7 +169,7 @@ const CSS = `
     background-color: #F0F2F5;
     border-left: 3pt solid #9CA3AF;
     padding: 5pt 10pt;
-    font-size: 11pt;
+    font-size: 10pt;
     font-weight: bold;
     color: #333;
     text-transform: uppercase;
@@ -181,7 +181,7 @@ const CSS = `
     border-top: none;
     border-left: 3pt solid #E5E7EB;
     padding: 8pt 12pt;
-    font-size: 11pt;
+    font-size: 10pt;
     color: #444;
     line-height: 1.55;
   }
@@ -220,8 +220,8 @@ const CSS = `
 
   /* ── Habilidades ── */
   .hab-item {
-    margin-bottom: 8pt;
-    line-height: 1.55;
+    margin-bottom: 4pt;
+    line-height: 1.5;
     text-align: justify;
   }
   .hab-code {
@@ -235,7 +235,7 @@ const CSS = `
 
   /* ── Observação (itálico) ── */
   .obs-text {
-    font-style: italic;
+    font-style: normal;
   }
 
   /* ── Metodologia HTML rico ── */
