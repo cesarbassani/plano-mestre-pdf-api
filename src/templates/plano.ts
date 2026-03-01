@@ -30,34 +30,6 @@ function esc(text: string | null | undefined): string {
     .replace(/"/g, '&quot;');
 }
 
-// ── Helper: agrupar habilidades por componente ──
-
-interface GroupedObj {
-  componente: string;
-  objetos: string[];
-  habilidades: HabilidadeData[];
-}
-
-function groupByComponente(habilidades: HabilidadeData[]): GroupedObj[] {
-  const map = new Map<string, GroupedObj>();
-
-  for (const hab of habilidades) {
-    const comp = hab.objeto?.componente?.name || 'Geral';
-    if (!map.has(comp)) {
-      map.set(comp, { componente: comp, objetos: [], habilidades: [] });
-    }
-    const group = map.get(comp)!;
-    group.habilidades.push(hab);
-
-    const objName = hab.objeto?.name;
-    if (objName && !group.objetos.includes(objName)) {
-      group.objetos.push(objName);
-    }
-  }
-
-  return Array.from(map.values());
-}
-
 // ============================================================
 // CSS — Replica fielmente o layout do PDF jsPDF atual
 // ============================================================
@@ -286,7 +258,7 @@ export function renderPlanoHtml(header: PlanHeader, dias: DiaData[]): string {
   parts.push('<div class="main-title">PLANO DE AULA DO ENSINO FUNDAMENTAL</div>');
   parts.push('<hr class="divider">');
 
-  // ── Metadados (ordem: Professor, Componente, Período+Ano, Turma+Turno, Escola) ──
+  // ── Metadados (ordem: Escola, Professor, Componente, Período+Ano, Turma+Turno) ──
   const periodoText = (() => {
     try {
       if (header.periodoInicio === header.periodoFim) {
@@ -358,28 +330,35 @@ export function renderPlanoHtml(header: PlanHeader, dias: DiaData[]): string {
       parts.push(`<div class="day-header">${esc(dayFormatted)} – ${esc(tipoLabel)}</div>`);
     }
 
-    // Agrupar habilidades por componente
-    const groups = groupByComponente(dia.habilidades);
+    // ── Objetos de Conhecimento (na ordem de position das habilidades) ──
+    const objetos: { componente: string; name: string }[] = [];
+    for (const hab of dia.habilidades) {
+      const objName = hab.objeto?.name;
+      const compName = hab.objeto?.componente?.name || '';
+      if (objName) {
+        const key = `${compName}:${objName}`;
+        if (!objetos.some(o => `${o.componente}:${o.name}` === key)) {
+          objetos.push({ componente: compName, name: objName });
+        }
+      }
+    }
 
-    // ── Objetos de Conhecimento ──
-    if (groups.length > 0 && groups.some(g => g.objetos.length > 0)) {
+    if (objetos.length > 0) {
       parts.push('<div class="section">');
       parts.push('<div class="section-bar">Objeto(s) de Conhecimento</div>');
       parts.push('<div class="section-body">');
-      for (const group of groups) {
-        for (const objName of group.objetos) {
-          parts.push('<div class="objeto-item">');
-          if (group.componente && group.componente !== 'Geral') {
-            parts.push(`<span class="objeto-comp">${esc(group.componente)}:</span> `);
-          }
-          parts.push(`${esc(objName)}`);
-          parts.push('</div>');
+      for (const obj of objetos) {
+        parts.push('<div class="objeto-item">');
+        if (obj.componente) {
+          parts.push(`<span class="objeto-comp">${esc(obj.componente)}:</span> `);
         }
+        parts.push(`${esc(obj.name)}`);
+        parts.push('</div>');
       }
       parts.push('</div></div>');
     }
 
-    // ── Habilidades ──
+    // ── Habilidades (na ordem de position) ──
     if (dia.habilidades.length > 0) {
       parts.push('<div class="section">');
       parts.push('<div class="section-bar">Habilidade(s)</div>');

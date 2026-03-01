@@ -90,7 +90,7 @@ export async function fetchPlanoData(planoId: string, diaIds?: string[]): Promis
 
   const diasData: DiaData[] = await Promise.all(
     (dias || []).map(async (dia: any) => {
-      // Habilidades com joins
+      // Habilidades com joins — ordenado por position
       const { data: habsRaw } = await supabase
         .from('dias_habilidades')
         .select(`
@@ -102,7 +102,8 @@ export async function fetchPlanoData(planoId: string, diaIds?: string[]): Promis
             )
           )
         `)
-        .eq('dia_id', dia.id);
+        .eq('dia_id', dia.id)
+        .order('position', { ascending: true });
 
       // Recursos
       const { data: recsRaw } = await supabase
