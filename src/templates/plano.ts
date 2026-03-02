@@ -238,6 +238,7 @@ const CSS = `
   .objeto-item {
     margin-bottom: 2pt;
     line-height: 1.5;
+    text-align: justify;
   }
   .objeto-comp {
     font-weight: bold;
