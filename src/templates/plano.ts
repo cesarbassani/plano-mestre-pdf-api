@@ -30,6 +30,61 @@ function esc(text: string | null | undefined): string {
     .replace(/"/g, '&quot;');
 }
 
+// ── Helper: agrupar por componente na ordem de primeira aparição ──
+//
+// Recebe habilidades já ordenadas por position.
+// Agrupa por componente (ordem da 1ª aparição no array),
+// dentro de cada componente agrupa por objeto (ordem da 1ª aparição),
+// dentro de cada objeto mantém habilidades na ordem de position.
+//
+// Exemplo: position 0=Mat/Álgebra, 1=Ciências/Vida, 2=Mat/Geometria
+// Resultado:
+//   Matemática (1º componente a aparecer)
+//     └─ Álgebra → EF01MA01
+//     └─ Geometria → EF01MA05
+//   Ciências (2º componente a aparecer)
+//     └─ Vida → EF01CI01
+
+interface ObjetoGroup {
+  name: string;
+  habilidades: HabilidadeData[];
+}
+
+interface ComponenteGroup {
+  componente: string;
+  objetos: ObjetoGroup[];
+}
+
+function groupByFirstAppearance(habilidades: HabilidadeData[]): ComponenteGroup[] {
+  const compMap = new Map<string, ComponenteGroup>();
+  const compOrder: string[] = [];
+
+  for (const hab of habilidades) {
+    const compName = hab.objeto?.componente?.name || 'Geral';
+    const objName = hab.objeto?.name || '';
+
+    // Componente: criar grupo se não existe (preserva ordem de 1ª aparição)
+    if (!compMap.has(compName)) {
+      compMap.set(compName, { componente: compName, objetos: [] });
+      compOrder.push(compName);
+    }
+    const compGroup = compMap.get(compName)!;
+
+    // Objeto: criar sub-grupo se não existe dentro do componente
+    let objGroup = compGroup.objetos.find(o => o.name === objName);
+    if (!objGroup) {
+      objGroup = { name: objName, habilidades: [] };
+      compGroup.objetos.push(objGroup);
+    }
+
+    // Habilidade: adicionar na ordem de position (já vem ordenada)
+    objGroup.habilidades.push(hab);
+  }
+
+  // Retornar na ordem de primeira aparição
+  return compOrder.map(name => compMap.get(name)!);
+}
+
 // ============================================================
 // CSS — Replica fielmente o layout do PDF jsPDF atual
 // ============================================================
@@ -205,7 +260,7 @@ const CSS = `
     color: #444;
   }
 
-  /* ── Observação (itálico) ── */
+  /* ── Observação ── */
   .obs-text {
     font-style: normal;
   }
@@ -262,10 +317,8 @@ export function renderPlanoHtml(header: PlanHeader, dias: DiaData[]): string {
   const periodoText = (() => {
     try {
       if (header.periodoInicio === header.periodoFim) {
-        // Dia único: "27/02/2026"
         return formatDate(header.periodoInicio, 'dd/MM/yyyy');
       }
-      // Período: "27/02 a 28/02/2026"
       const inicio = formatDate(header.periodoInicio, 'dd/MM');
       const fim = formatDate(header.periodoFim, 'dd/MM/yyyy');
       return `${inicio} a ${fim}`;
@@ -330,44 +383,43 @@ export function renderPlanoHtml(header: PlanHeader, dias: DiaData[]): string {
       parts.push(`<div class="day-header">${esc(dayFormatted)} – ${esc(tipoLabel)}</div>`);
     }
 
-    // ── Objetos de Conhecimento (na ordem de position das habilidades) ──
-    const objetos: { componente: string; name: string }[] = [];
-    for (const hab of dia.habilidades) {
-      const objName = hab.objeto?.name;
-      const compName = hab.objeto?.componente?.name || '';
-      if (objName) {
-        const key = `${compName}:${objName}`;
-        if (!objetos.some(o => `${o.componente}:${o.name}` === key)) {
-          objetos.push({ componente: compName, name: objName });
-        }
-      }
-    }
+    // Agrupar por componente na ordem de primeira aparição (via position)
+    const groups = groupByFirstAppearance(dia.habilidades);
 
-    if (objetos.length > 0) {
+    // ── Objetos de Conhecimento ──
+    const hasObjetos = groups.some(g => g.objetos.some(o => o.name));
+    if (hasObjetos) {
       parts.push('<div class="section">');
       parts.push('<div class="section-bar">Objeto(s) de Conhecimento</div>');
       parts.push('<div class="section-body">');
-      for (const obj of objetos) {
-        parts.push('<div class="objeto-item">');
-        if (obj.componente) {
-          parts.push(`<span class="objeto-comp">${esc(obj.componente)}:</span> `);
+      for (const group of groups) {
+        for (const obj of group.objetos) {
+          if (!obj.name) continue;
+          parts.push('<div class="objeto-item">');
+          if (group.componente && group.componente !== 'Geral') {
+            parts.push(`<span class="objeto-comp">${esc(group.componente)}:</span> `);
+          }
+          parts.push(`${esc(obj.name)}`);
+          parts.push('</div>');
         }
-        parts.push(`${esc(obj.name)}`);
-        parts.push('</div>');
       }
       parts.push('</div></div>');
     }
 
-    // ── Habilidades (na ordem de position) ──
+    // ── Habilidades (agrupadas por componente, na ordem de position) ──
     if (dia.habilidades.length > 0) {
       parts.push('<div class="section">');
       parts.push('<div class="section-bar">Habilidade(s)</div>');
       parts.push('<div class="section-body">');
-      for (const hab of dia.habilidades) {
-        parts.push('<div class="hab-item">');
-        parts.push(`<span class="hab-code">(${esc(hab.code)})</span> `);
-        parts.push(`<span class="hab-desc">${esc(hab.description)}</span>`);
-        parts.push('</div>');
+      for (const group of groups) {
+        for (const obj of group.objetos) {
+          for (const hab of obj.habilidades) {
+            parts.push('<div class="hab-item">');
+            parts.push(`<span class="hab-code">(${esc(hab.code)})</span> `);
+            parts.push(`<span class="hab-desc">${esc(hab.description)}</span>`);
+            parts.push('</div>');
+          }
+        }
       }
       parts.push('</div></div>');
     }
