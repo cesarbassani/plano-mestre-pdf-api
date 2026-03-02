@@ -238,12 +238,6 @@ const CSS = `
   .objeto-item {
     margin-bottom: 2pt;
     line-height: 1.5;
-    text-align: justify;
-  }
-  .objeto-comp {
-    font-weight: bold;
-    color: #333;
-    text-transform: uppercase;
   }
 
   /* ── Habilidades ── */
@@ -254,7 +248,7 @@ const CSS = `
   }
   .hab-code {
     font-weight: bold;
-    color: #333;
+    color: #005A9C;
     white-space: nowrap;
   }
   .hab-desc {
@@ -396,12 +390,11 @@ export function renderPlanoHtml(header: PlanHeader, dias: DiaData[]): string {
       for (const group of groups) {
         for (const obj of group.objetos) {
           if (!obj.name) continue;
-          parts.push('<div class="objeto-item">');
           if (group.componente && group.componente !== 'Geral') {
-            parts.push(`<span class="objeto-comp">${esc(group.componente)}:</span> `);
+            parts.push(`<div class="objeto-item"><b>${esc(group.componente.toUpperCase())}:</b> ${esc(obj.name)}</div>`);
+          } else {
+            parts.push(`<div class="objeto-item">${esc(obj.name)}</div>`);
           }
-          parts.push(`${esc(obj.name)}`);
-          parts.push('</div>');
         }
       }
       parts.push('</div></div>');
