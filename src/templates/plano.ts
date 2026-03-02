@@ -382,10 +382,14 @@ export function renderPlanoHtml(header: PlanHeader, dias: DiaData[]): string {
     parts.push('<div class="day-block">');
 
     // Day header: "27/02/2026: sexta-feira – REGULAR"
+    /* TROCAR POR: */
     if (!dia.ocultar_data_pdf) {
       const dayFormatted = formatDate(dia.data_aula, "dd/MM/yyyy': 'EEEE");
-      const tipoLabel = dia.tipo === 'Presencial' ? 'REGULAR' : dia.tipo.toUpperCase();
-      parts.push(`<div class="day-header">${esc(dayFormatted)} – ${esc(tipoLabel)}</div>`);
+      if (dia.tipo === 'Presencial') {
+        parts.push(`<div class="day-header">${esc(dayFormatted)}</div>`);
+      } else {
+        parts.push(`<div class="day-header">${esc(dayFormatted)} – ${esc(dia.tipo.toUpperCase())}</div>`);
+      }
     }
 
     // Agrupar por componente na ordem de primeira aparição (via position)
