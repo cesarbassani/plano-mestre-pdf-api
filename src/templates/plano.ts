@@ -239,6 +239,11 @@ const CSS = `
     margin-bottom: 2pt;
     line-height: 1.5;
   }
+  
+  .section.objetos {
+    break-inside: auto;
+    page-break-inside: auto;
+  }
 
   /* ── Habilidades ── */
   .hab-item {
@@ -253,6 +258,11 @@ const CSS = `
   }
   .hab-desc {
     color: #444;
+  }
+
+  .section.habilidades {
+    break-inside: auto;
+    page-break-inside: auto;
   }
 
   /* ── Observação ── */
@@ -384,7 +394,7 @@ export function renderPlanoHtml(header: PlanHeader, dias: DiaData[]): string {
     // ── Objetos de Conhecimento ──
     const hasObjetos = groups.some(g => g.objetos.some(o => o.name));
     if (hasObjetos) {
-      parts.push('<div class="section">');
+      parts.push('<div class="section objetos">');
       parts.push('<div class="section-bar">Objeto(s) de Conhecimento</div>');
       parts.push('<div class="section-body">');
       for (const group of groups) {
@@ -402,7 +412,7 @@ export function renderPlanoHtml(header: PlanHeader, dias: DiaData[]): string {
 
     // ── Habilidades (agrupadas por componente, na ordem de position) ──
     if (dia.habilidades.length > 0) {
-      parts.push('<div class="section">');
+      parts.push('<div class="section habilidades">');
       parts.push('<div class="section-bar">Habilidade(s)</div>');
       parts.push('<div class="section-body">');
       for (const group of groups) {
